@@ -1,3 +1,7 @@
+/****
+  Holds a history of the users financial transactions.
+****/
+
 IF NOT EXISTS ( SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'TransactionHistory' )
 BEGIN
 CREATE TABLE dbo.TransactionHistory

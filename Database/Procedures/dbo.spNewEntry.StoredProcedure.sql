@@ -1,3 +1,7 @@
+/****
+  Procedure for adding a new transaction.
+****/
+
 CREATE OR ALTER PROCEDURE dbo.spNewEntry
 (
      @AccountName     VARCHAR(128)
