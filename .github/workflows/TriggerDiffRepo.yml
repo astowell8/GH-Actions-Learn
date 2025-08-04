@@ -16,8 +16,9 @@ jobs:
             "Authorization" = "Bearer ${{ secrets.PAT_GH_LEARN }}"
           }
 
+          # Ref needs to be exact
           $body = @{
-            ref = "main"
+            ref = "Main"
           } | ConvertTo-Json
 
           #Target Repo URL
