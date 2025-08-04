@@ -24,7 +24,8 @@ jobs:
           #Target Repo URL
           $Owner         = "astowell8"  # Owner or Org
           $Repo          = "GH-Actions-Learn-DiffRepo"
-          $workflow_yaml = "Say-Hello.yml"
+          $workflow_yaml = "Diff-Repo.yaml"
+          #$workflow_yaml = "Say-Hello.yml"
 
           $uri = "https://api.github.com/repos/$Owner/$Repo/actions/workflows/$workflow_yaml/dispatches"
 
