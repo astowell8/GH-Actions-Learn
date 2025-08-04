@@ -14,7 +14,7 @@ jobs:
         run: |
           $headers = @{
             "Accept" = "application/vnd.github+json"
-            "Authorization" = "Bearer ${{ secrets.TARGET_REPO_PAT }}"
+            "Authorization" = "Bearer ${{ secrets.PAT_GH_LEARN }}"
           }
 
           $body = @{
