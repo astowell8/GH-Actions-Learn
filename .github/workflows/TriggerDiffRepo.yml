@@ -21,6 +21,11 @@ jobs:
             ref = "main"
           } | ConvertTo-Json
 
-          $uri = "https://api.github.com/repos/owner/target-repo/actions/workflows/workflow_file.yml/dispatches"
+          #Target Repo URL
+          $Owner         = "astowell8"  # Owner or Org
+          $Repo          = "GH-Actions-Learn-DiffRepo"
+          $workflow_yaml = "Say-Hello.yml"
+
+          $uri = "https://api.github.com/repos/$Owner/$Repo/actions/workflows/$workflow_yaml/dispatches"
 
           Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body
