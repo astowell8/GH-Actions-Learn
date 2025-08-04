@@ -1,0 +1,26 @@
+# .github/workflows/trigger-another-repo.yml
+name: Trigger Another Repo
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  trigger:
+    runs-on: windows-latest
+    steps:
+      - name: Trigger workflow in target repo using PowerShell
+        shell: pwsh
+        run: |
+          $headers = @{
+            "Accept" = "application/vnd.github+json"
+            "Authorization" = "Bearer ${{ secrets.TARGET_REPO_PAT }}"
+          }
+
+          $body = @{
+            ref = "main"
+          } | ConvertTo-Json
+
+          $uri = "https://api.github.com/repos/owner/target-repo/actions/workflows/workflow_file.yml/dispatches"
+
+          Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body
