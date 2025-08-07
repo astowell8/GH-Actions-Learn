@@ -21,6 +21,9 @@ set-location C:\Git\GH-Actions-Learn
 $ReleaseBranch = 'main' 
 $TagPrefix = 'Release_v' #Prefix used to identify Release tags.
 
+$ReleaseTag = ''
+$PreviousTag = ''
+
 # ~~  SETUP  ~~
 
 # 1. Need to Fetch all changes and tags from all remote branchs
@@ -41,47 +44,50 @@ if ($currentBranch -ne 'main') {
 }
 
 # Determine the prefix for the tag
-$prefix = "Release_$Major.$Minor.$Patch.$Build"
+#$prefix = "Release_$Major.$Minor.$Patch.$Build"
 
 # Get all tags that match the pattern
-$tags = git tag --list "$TagPrefix*"
+$tags = git tag --list "$TagPrefix[0-9]*.[0-9]*.[0-9]*"
 
 # Sort tags using custom script block for version comparison
-$sortedTags = $tags | Sort-Object { [version]( $_.replace($TagPrefix,'' ) ) } # -replace 'Release_', '') }
+#$sortedTags = $tags | Sort-Object { [version]( $_.replace($TagPrefix,'' ) ) } # -replace 'Release_', '') }
 
 #[version]  Type Accelerator. version is a system.version class. Its it represents a version number.
 
-$Arr_SortedTags = @()
+$SortedTags = @()
 
 $tags | ForEach-Object {
-    $Arr_SortedTags += [string]( $_.replace($TagPrefix,'' ) )
-}
+    $SortedTags += [string]( $_.replace($TagPrefix,'' ) )
+} 
+$SortedTags = $SortedTags | Sort-Object -Descending
 
-$tags 
+$ReleaseTag  = $TagPrefix + $SortedTags[0]
+$PreviousTag = $TagPrefix + $SortedTags[1]
 
-$Arr_SortedTags = $Arr_SortedTags | Sort-Object -Descending
+git diff --name-only $PreviousTag $ReleaseBranch
 
-# Select the last one (highest version)
-$latestTag = $sortedTags | Select-Object -Last 1
 
-# Determine the next build number
-if (-not $latestTag) {
-    $nextBuildNumber = 0
-} else {
-    $latestBuildNumber = [int]($latestTag -replace '^.*\.')
-    $nextBuildNumber = $latestBuildNumber + 1
-}
-
-# Construct the next tag
-$nextTag = "$prefix$nextBuildNumber"
-
-# Output the next tag for confirmation
-Write-Host "New tag will be $nextTag"
-
-# Create the new tag
-git tag -a $nextTag -m "SQLConfig_Release"
-#git tag latest -f
-
-# Push the new tag to the origin
-git push origin $nextTag
-#git push origin -f latest
+## Select the last one (highest version)
+#$latestTag = $sortedTags | Select-Object -Last 1
+#
+## Determine the next build number
+#if (-not $latestTag) {
+#    $nextBuildNumber = 0
+#} else {
+#    $latestBuildNumber = [int]($latestTag -replace '^.*\.')
+#    $nextBuildNumber = $latestBuildNumber + 1
+#}
+#
+## Construct the next tag
+#$nextTag = "$prefix$nextBuildNumber"
+#
+## Output the next tag for confirmation
+#Write-Host "New tag will be $nextTag"
+#
+## Create the new tag
+#git tag -a $nextTag -m "SQLConfig_Release"
+##git tag latest -f
+#
+## Push the new tag to the origin
+#git push origin $nextTag
+##git push origin -f latest

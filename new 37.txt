@@ -1,0 +1,72 @@
+on:
+  push:
+    tags:
+      - 'Release_*.*.*.*'  # Trigger on tags like Release_24.3.0.1
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch additional information for tags
+
+      - name: Generate Tag and Branch Information and Verify Branch Name
+        run: |
+          $TAG_COMMIT_SHA = git rev-list -n 1 $env:GITHUB_REF
+
+          #OLD METHOD$BRANCH = git branch --all --contains $TAG_COMMIT_SHA | Select-String 'remotes/origin/' | ForEach-Object { $_.ToString().Trim() -replace '.*remotes/origin/', '' }
+
+          #Check for main branch.
+          $BRANCH = "NONE"
+          foreach( $B in (git branch --all --contains $TAG_COMMIT_SHA ) )
+          {
+            if ($B.ToString().replace(' ','').replace('remotes/origin/','') -eq 'main' ){ $BRANCH = 'main' }
+          }
+
+          if ($BRANCH -ne 'main') {
+            Write-Error "This action can only be run on the 'main' branch. Current branch: $BRANCH"
+            exit 1
+          }          
+          $INFO = "Created by $env:GITHUB_ACTOR from branch $BRANCH"
+          echo "TAG_INFO=$INFO" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Create ZIP package
+        run: |
+          $tag = "${{ github.ref }}".Replace("refs/tags/", "")
+          mkdir ./$tag
+          cp -r ./src/* ./$tag
+          powershell Compress-Archive -Path ./$tag -DestinationPath ./VcrsSqlConfig.zip
+
+
+      - name: Create Release
+        id: create_release
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref }}".Replace("refs/tags/", "")
+          $releaseName = "$tag"
+          $body = "$env:TAG_INFO"
+          $data = @{
+            tag_name = $tag
+            name = $releaseName
+            body = $body
+          } | ConvertTo-Json
+          $headers = @{
+            "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}"
+            "Content-Type" = "application/json"
+          }
+          $response = Invoke-RestMethod -Method Post -Headers $headers -Body $data -Uri https://api.github.com/repos/${{ github.repository }}/releases
+          echo "::set-output name=upload_url::$( $response.upload_url )"
+
+      - name: Upload VNext Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./VcrsSqlConfig.zip
+          asset_name: VcrsSqlConfig.zip
+          asset_content_type: application/zip
